@@ -1,4 +1,3 @@
-
 #define CEREAL
 
 #define MASK
@@ -12,7 +11,7 @@
 #include <RFClickerLib.h> // https://github.com/pgillan145/RFClickerLib
 #include "AniMask.h"
  
-#define MODES 1
+#define MODES 2
 
 uint32_t now = 0;
 int mode = 0;
@@ -21,6 +20,9 @@ void updateMenu() {
   switch(mode) {
     case 0:
       writeMenu("RIGHT|FROWN|LEFT|SMILE");
+      break;
+    case 1:
+      writeMenu("COPS|--|--|--");
       break;
   }
 }
@@ -43,6 +45,7 @@ int8_t color = 0;
 
 void loop() {
   now = millis();
+  BLE.poll();
   doAnimations();  
   
   String input_str = serialInput(10);
@@ -82,7 +85,6 @@ void loop() {
         break;
     };
   };
-
 }
 
 void RFClickerButtonClick(BLEDevice central, BLECharacteristic characteristic) {
@@ -112,6 +114,30 @@ void RFClickerButtonClick(BLEDevice central, BLECharacteristic characteristic) {
         if (TSTBUTTON(ble_buttons, BUTTON4)) {
           SPL("up");
           addAnimation(smile, sizeof(smile)/sizeof(smile[0]), 15, ANI_HOLD);
+        }
+        else {
+        }
+        matrix->show();
+        break;
+    case 1:
+      if (TSTBUTTON(ble_buttons, BUTTON1)) {
+          SPL("right");
+          addAnimation(red, sizeof(red)/sizeof(red[0]), 15, ANI_REPEAT);
+          addAnimation(blue, sizeof(blue)/sizeof(blue[0]), 15, ANI_REPEAT);
+        } 
+        else {
+        }
+        if (TSTBUTTON(ble_buttons, BUTTON2)) {
+          SPL("down");
+          addAnimation(frown, sizeof(frown)/sizeof(frown[0]), 15, ANI_HOLD);
+        }
+        else {
+        }
+        if (TSTBUTTON(ble_buttons, BUTTON3)) {
+        }
+        else {
+        }
+        if (TSTBUTTON(ble_buttons, BUTTON4)) {
         }
         else {
         }
