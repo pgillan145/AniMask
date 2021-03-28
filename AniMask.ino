@@ -12,12 +12,23 @@
 #include <RFClickerLib.h> // https://github.com/pgillan145/RFClickerLib
 #include "AniMask.h"
  
-char clicker_history[HISTORY_LENGTH];
+#define MODES 1
+
+uint32_t now = 0;
+int mode = 0;
+
+void updateMenu() {
+  switch(mode) {
+    case 0:
+      writeMenu("RIGHT|FROWN|LEFT|SMILE");
+      break;
+  }
+}
 
 void setup() {
   PGardLibSetup();
-  RFClickerSetup(clicker_history);
-
+  RFClickerLibSetup("AniMask", RFClickerButtonClick);
+  updateMenu();
   matrix->begin();
   matrix->setBrightness(128);
 }
@@ -30,12 +41,9 @@ float humidity = 0.0;
 int16_t speed = 60;
 int8_t color = 0;
 
-uint32_t now = 0;
-
 void loop() {
   now = millis();
   doAnimations();  
-
   
   String input_str = serialInput(10);
 
@@ -75,43 +83,56 @@ void loop() {
     };
   };
 
-  
-  getClickerHistory(clicker_history);
-    for (uint8_t i = 0 ; i < HISTORY_LENGTH; i++) {
-      uint8_t ble_buttons = clicker_history[i];
-      if (BUTTON1(ble_buttons)) {
-#ifdef CEREAL
-          Serial.println("right");
-#endif
+}
+
+void RFClickerButtonClick(BLEDevice central, BLECharacteristic characteristic) {
+  byte ble_buttons = (characteristic.value())[0];
+    
+  switch(mode) {
+    case 0:
+      if (TSTBUTTON(ble_buttons, BUTTON1)) {
+          SPL("right");
           addAnimation(red, sizeof(red)/sizeof(red[0]), 15, ANI_REPEAT);
         } 
         else {
         }
-        if (BUTTON2(ble_buttons)) {
-#ifdef CEREAL
-          Serial.println("down");
-#endif
+        if (TSTBUTTON(ble_buttons, BUTTON2)) {
+          SPL("down");
           addAnimation(frown, sizeof(frown)/sizeof(frown[0]), 15, ANI_HOLD);
         }
         else {
         }
         
-        if (BUTTON3(ble_buttons)) {
-#ifdef CEREAL
-          Serial.println("left");
-#endif
+        if (TSTBUTTON(ble_buttons, BUTTON3)) {
+          SPL("left");
           addAnimation(blue, sizeof(blue)/sizeof(blue[0]), 15, ANI_REPEAT);
         }
         else {
         }
-        if (BUTTON4(ble_buttons)) {
-#ifdef CEREAL
-          Serial.println("up");
-#endif
+        if (TSTBUTTON(ble_buttons, BUTTON4)) {
+          SPL("up");
           addAnimation(smile, sizeof(smile)/sizeof(smile[0]), 15, ANI_HOLD);
         }
         else {
         }
         matrix->show();
+        break;
+  } // switch(mode)
+
+  if (TSTBUTTON(ble_buttons, BUTTON5)) {
+    SPL("button5");
+    mode++;
+    if (mode >= MODES) {
+      mode = 0;
+    }
+    updateMenu();
+  }
+  if (TSTBUTTON(ble_buttons, BUTTON6)) {
+    SPL("button6");
+    mode--;
+    if (mode < 0) {
+      mode = MODES-1;
+    }
+    updateMenu();
   }
 }
